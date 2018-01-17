@@ -20,6 +20,7 @@ func init() {
 		log.Fatal(err)
 	}
 	DB = db
+	DB.LogMode(true)
 
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     config.RedisAddr,

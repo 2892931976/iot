@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	Uid      int64 `gorm:"primary_key"` // set AnimalId to be primary key
+	Uid      int `gorm:"primary_key"` // set AnimalId to be primary key
 	Email    string
 	Nickname string
 	Pwd      string

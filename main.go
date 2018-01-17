@@ -1,10 +1,56 @@
+//
+//     Schemes: http, https
+//     Host: localhost:3333
+//     BasePath: /v1
+//     Version: 0.0.1
+//     License: MIT http://opensource.org/licenses/MIT
+//     Contact: 周庆<admin@mojotv.cn> http://www.mojotv.cn
+//
+//     Consumes:
+//     - application/json
+//     - application/xml
+//
+//     Produces:
+//     - application/json
+//     - application/xml
+//
+//     Security:
+//     - api_key:
+//
+//     SecurityDefinitions:
+//     api_key:
+//          type: apiKey
+//          name: KEY
+//          in: header
+//     oauth2:
+//         type: oauth2
+//         authorizationUrl: /oauth2/auth
+//         tokenUrl: /oauth2/token
+//         in: header
+//         scopes:
+//           bar: foo
+//         flow: accessCode
+//
+//     Extensions:
+//     x-meta-value: value
+//     x-meta-array:
+//       - value1
+//       - value2
+//     x-meta-array-obj:
+//       - name: obj
+//         value: field
+//
+// swagger:meta
+
 package main
 
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/mojoGin/models"
+	"github.com/mojocn/turbo-iot/config"
 	"github.com/mojocn/turbo-iot/controllers"
+	"github.com/mojocn/turbo-iot/middlewares"
 	"time"
 )
 
@@ -13,7 +59,6 @@ func main() {
 	defer models.DB.Close()
 
 	router := gin.Default()
-	router.Use(gin.Logger())
 
 	// CORS for https://foo.com and https://github.com origins, allowing:
 	// - PUT and PATCH methods
@@ -21,10 +66,10 @@ func main() {
 	// - Credentials share
 	// - Preflight requests cached for 12 hours
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Origin", "Authorize"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders: []string{"Origin", "Authorize"},
+		//ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: false,
 		//AllowOriginFunc: func(origin string) bool {
 		//	return origin == "https://github.com"
@@ -36,10 +81,16 @@ func main() {
 
 	router.GET("/", controllers.AuthPost)
 
-	v1 := router.Group("/v1")
+	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/login", controllers.AuthPost)
-	}
 
-	router.Run(":3333")
+		v1.GET("/device", middlewares.JwtTokenCheck(), controllers.DeviceIndex)
+		v1.POST("/device", middlewares.JwtTokenCheck(), controllers.DeviceAdd)
+		v1.GET("/device/:dno", middlewares.JwtTokenCheck(), controllers.DeviceInfo)
+		v1.PUT("/device", middlewares.JwtTokenCheck(), controllers.DeviceUpdate)
+		v1.DELETE("/device", middlewares.JwtTokenCheck(), controllers.DeviceDelete)
+
+	}
+	router.Run(config.AppPort)
 }
