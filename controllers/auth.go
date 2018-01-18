@@ -1,11 +1,10 @@
 package controllers
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/turbo-iot/models"
 	. "github.com/mojocn/turbo-iot/utils"
-
-	"github.com/gin-gonic/gin/json"
 	"log"
 	"time"
 )
@@ -23,7 +22,7 @@ func AuthPost(c *gin.Context) {
 		JsonResponseError(c, err)
 		return
 	}
-	if input.Pwd != dbUser.Pwd {
+	if !CheckPasswordHash(input.Pwd, dbUser.Pwd) {
 		JsonResponseError(c, "密码错误")
 		return
 	}
@@ -46,6 +45,7 @@ func AuthPost(c *gin.Context) {
 		return
 	}
 	expirationSecond := expiration / time.Second
+	dbUser.Pwd = ""
 	data := map[string]interface{}{"token": token, "expire": expirationSecond, "user": dbUser}
 	JsonResponseSuccess(c, data)
 }

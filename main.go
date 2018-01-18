@@ -68,7 +68,7 @@ func main() {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders: []string{"Origin", "Authorize"},
+		AllowHeaders: []string{"Origin", "Authorize", "Authorization"},
 		//ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: false,
 		//AllowOriginFunc: func(origin string) bool {
@@ -78,19 +78,18 @@ func main() {
 	}))
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
+	router.POST("/iot/v1/login", controllers.AuthPost)
 
-	router.GET("/", controllers.AuthPost)
-
-	v1 := router.Group("/api/v1")
+	iotV1 := router.Group("/iot/v1")
+	iotV1.Use(middlewares.JwtTokenCheck())
 	{
-		v1.POST("/login", controllers.AuthPost)
-
-		v1.GET("/device", middlewares.JwtTokenCheck(), controllers.DeviceIndex)
-		v1.POST("/device", middlewares.JwtTokenCheck(), controllers.DeviceAdd)
-		v1.GET("/device/:dno", middlewares.JwtTokenCheck(), controllers.DeviceInfo)
-		v1.PUT("/device", middlewares.JwtTokenCheck(), controllers.DeviceUpdate)
-		v1.DELETE("/device", middlewares.JwtTokenCheck(), controllers.DeviceDelete)
+		iotV1.GET("/device", controllers.DeviceIndex)
+		iotV1.POST("/device", controllers.DeviceAdd)
+		iotV1.GET("/device/:dno", controllers.DeviceInfo)
+		iotV1.PUT("/device", controllers.DeviceUpdate)
+		iotV1.DELETE("/device/:dno", controllers.DeviceDelete)
 
 	}
+
 	router.Run(config.AppPort)
 }

@@ -7,10 +7,13 @@ import (
 	"math"
 )
 
+type jsonInput struct {
+	models.Device
+	models.Lorawan
+}
+
 func DeviceAdd(c *gin.Context) {
-
-	var input models.Device
-
+	var input jsonInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.JsonResponseError(c, err)
 		return
@@ -18,11 +21,47 @@ func DeviceAdd(c *gin.Context) {
 		uid := c.GetInt("uid")
 		input.D_userid = uid
 	}
+	if models.IsProductNotValid(input.D_pno) {
+		utils.JsonResponseError(c, "d_no为无效产品型号")
+		return
+	}
+	//正常设备
+	if models.IsNormalDevice(input.D_pno) {
+		input.D_ptype = 1
+	}
+	//网关设备
+	if models.IsGetwayDevice(input.D_pno) {
+		input.D_ptype = 2
+	} else {
+		if input.D_appeui == "" {
+			utils.JsonResponseError(c, "d_appeui参数必填!")
+			return
+		}
+	}
 
-	if err := models.DB.Create(&input).Error; err != nil {
+	tx := models.DB.Begin()
+	//lorawan设备
+	if models.IsLoraWanDevice(input.D_pno) {
+		if input.Lda_dev_addr == "" || input.Lda_app_key == "" || input.Lda_app_s_key == "" || input.Lda_nwk_s_key == "" {
+			tx.Rollback()
+			utils.JsonResponseError(c, "loraWan设备4个参数必填")
+			return
+		}
+		input.D_ptype = 1
+		input.Lda_dno = input.D_no
+		if err := tx.Create(&input.Lorawan).Error; err != nil {
+			tx.Rollback()
+			utils.JsonResponseError(c, err)
+			return
+		}
+	}
+	//网关设备 和 普通设备 lorawan 设备写入设备表
+	if err := tx.Create(&input.Device).Error; err != nil {
+		tx.Rollback()
 		utils.JsonResponseError(c, err)
 		return
 	}
+	tx.Commit()
 	utils.JsonResponseSuccess(c, input)
 }
 
@@ -48,6 +87,12 @@ func DeviceUpdate(c *gin.Context) {
 		uid := c.GetInt("uid")
 		input.D_userid = uid
 	}
+	//检查设备编号
+	if models.IsNormalDevice(input.D_pno) {
+		utils.JsonResponseError(c, "P_no:型号有误")
+		return
+	}
+
 	if input.D_no == "" {
 		utils.JsonResponseError(c, "d_no主键不能为空")
 		return
@@ -75,16 +120,13 @@ func DeviceInfo(c *gin.Context) {
 	utils.JsonResponseSuccess(c, instance)
 }
 func DeviceDelete(c *gin.Context) {
-	var input models.Device
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.JsonResponseError(c, err)
-		return
-	}
-	if input.D_no == "" {
+
+	dno := c.Query("dno")
+	if dno == "" {
 		utils.JsonResponseError(c, "d_no主键不能为空")
 		return
 	}
-	if err := models.DB.Delete(&input).Error; err != nil {
+	if err := models.DB.Delete(&models.Device{D_no: dno}).Error; err != nil {
 		utils.JsonResponseError(c, err)
 	} else {
 		utils.JsonResponseSuccess(c, nil)
