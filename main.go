@@ -89,6 +89,7 @@ func main() {
 		iotV1.PUT("/device", controllers.DeviceUpdate)
 		iotV1.DELETE("/device/:dno", controllers.DeviceDelete)
 
+		iotV1.POST("/command", controllers.CommandAdd)
 	}
 
 	router.Run(config.AppPort)

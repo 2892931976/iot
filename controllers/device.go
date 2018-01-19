@@ -68,7 +68,6 @@ func DeviceAdd(c *gin.Context) {
 	tx.Commit()
 	utils.JsonResponseSuccess(c, nil)
 }
-
 func DeviceIndex(c *gin.Context) {
 	uid := c.GetInt("uid")
 
@@ -83,7 +82,6 @@ func DeviceIndex(c *gin.Context) {
 	utils.JsonResponseSuccess(c, gin.H{"totalPage": totalPage, "page": page, "pageSize": pageSize, "list": list,
 		"totalCount": totalCount})
 }
-
 func DeviceUpdate(c *gin.Context) {
 	uid := c.GetInt("uid")
 	var input jsonInput
