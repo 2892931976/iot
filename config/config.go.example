@@ -1,11 +1,15 @@
 package config
 
 
-var DBHost = "localhost"
-var DBName = "dbname"
-var DBPassword = "password"
-var DBUser = "username"
-var DBPort = 3306
+const DBHost = "127.0.0.1"
+const DBName = "dbname"
+const DBPassword = "123456"
+const DBUser = "root"
+const DBPort = 3306
 const RedisAddr = "127.0.0.1:6379"
-const RedisPassword = ""
+const RedisPassword = "redis-password"
 const RedisDBIndex = 0
+const JwtSignSecret = "jwt-jwt"
+const AppName = "app-name"
+const RedisKeyPrefix = "iot:"
+const AppPort = ":4444"
