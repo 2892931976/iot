@@ -1,47 +1,3 @@
-//
-//     Schemes: http, https
-//     Host: localhost:3333
-//     BasePath: /v1
-//     Version: 0.0.1
-//     License: MIT http://opensource.org/licenses/MIT
-//     Contact: 周庆<admin@mojotv.cn> http://www.mojotv.cn
-//
-//     Consumes:
-//     - application/json
-//     - application/xml
-//
-//     Produces:
-//     - application/json
-//     - application/xml
-//
-//     Security:
-//     - api_key:
-//
-//     SecurityDefinitions:
-//     api_key:
-//          type: apiKey
-//          name: KEY
-//          in: header
-//     oauth2:
-//         type: oauth2
-//         authorizationUrl: /oauth2/auth
-//         tokenUrl: /oauth2/token
-//         in: header
-//         scopes:
-//           bar: foo
-//         flow: accessCode
-//
-//     Extensions:
-//     x-meta-value: value
-//     x-meta-array:
-//       - value1
-//       - value2
-//     x-meta-array-obj:
-//       - name: obj
-//         value: field
-//
-// swagger:meta
-
 package main
 
 import (
@@ -49,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/mojoGin/models"
 	"github.com/mojocn/turbo-iot/config"
-	"github.com/mojocn/turbo-iot/controllers"
+	"github.com/mojocn/turbo-iot/handlers"
 	"github.com/mojocn/turbo-iot/middlewares"
 	"time"
 )
@@ -78,18 +34,18 @@ func main() {
 	}))
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
-	router.POST("/iot/v1/login", controllers.AuthPost)
+	router.POST("/iot/v1/login", handlers.AuthPost)
 
 	iotV1 := router.Group("/iot/v1")
 	iotV1.Use(middlewares.JwtTokenCheck())
 	{
-		iotV1.GET("/device", controllers.DeviceIndex)
-		iotV1.POST("/device", controllers.DeviceAdd)
-		iotV1.GET("/device/:dno", controllers.DeviceInfo)
-		iotV1.PUT("/device", controllers.DeviceUpdate)
-		iotV1.DELETE("/device/:dno", controllers.DeviceDelete)
+		iotV1.GET("/device", handlers.DeviceIndex)
+		iotV1.POST("/device", handlers.DeviceAdd)
+		iotV1.GET("/device/:dno", handlers.DeviceInfo)
+		iotV1.PUT("/device", handlers.DeviceUpdate)
+		iotV1.DELETE("/device/:dno", handlers.DeviceDelete)
 
-		iotV1.POST("/command", controllers.CommandAdd)
+		iotV1.POST("/command", handlers.CommandAdd)
 	}
 
 	router.Run(config.AppPort)

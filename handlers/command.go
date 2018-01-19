@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"encoding/json"
@@ -8,8 +8,8 @@ import (
 )
 
 type cmdJson struct {
-	D_no     string
-	Playload string
+	D_no    string
+	Payload string
 }
 
 const redisDeviceCmdKey = "TBIoTSTDownlinkPrepareMsgList"
@@ -29,7 +29,7 @@ func CommandAdd(c *gin.Context) {
 		return
 	}
 
-	data := gin.H{"method": "disired", "devid": input.D_no, "state": gin.H{"payload": input.Playload}}
+	data := gin.H{"method": "disired", "devid": input.D_no, "state": gin.H{"payload": input.Payload}}
 	valueByets, err := json.Marshal(data)
 	if err != nil {
 		utils.JsonResponseError(c, "json序列化错误!")
@@ -40,6 +40,5 @@ func CommandAdd(c *gin.Context) {
 		utils.JsonResponseError(c, err)
 		return
 	}
-
 	utils.JsonResponseSuccess(c, "发送设备命令成功!")
 }
